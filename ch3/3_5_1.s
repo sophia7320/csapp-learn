@@ -1,13 +1,16 @@
 	.file	"3_5_1.c"
 	.text
 	.globl	scale
-	.def	scale;	.scl	2;	.type	32;	.endef
-	.seh_proc	scale
+	.type	scale, @function
 scale:
-	.seh_endprologue
-	leaq	(%rcx,%rdx,4), %rax
-	leaq	(%r8,%r8,2), %rdx
+.LFB22:
+	.cfi_startproc
+	leaq	(%rdi,%rsi,4), %rax
+	leaq	(%rdx,%rdx,2), %rdx
 	leaq	(%rax,%rdx,4), %rax
 	ret
-	.seh_endproc
-	.ident	"GCC: (Rev8, Built by MSYS2 project) 15.2.0"
+	.cfi_endproc
+.LFE22:
+	.size	scale, .-scale
+	.ident	"GCC: (GNU) 16.1.1 20260625"
+	.section	.note.GNU-stack,"",@progbits
