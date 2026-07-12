@@ -145,7 +145,7 @@ check the legality of your solutions.
     */
   int bitXor(int x, int y) {
 
-  return 2;
+  return ~(~(~x & y) & ~(x & ~y));
 }
 /*
  * tmin - return minimum two's complement integer
@@ -155,7 +155,7 @@ check the legality of your solutions.
  */
 int tmin(void) {
 
-  return 2;
+  return 1 << 31;
 
 }
 //2
@@ -166,8 +166,15 @@ int tmin(void) {
  *   Max ops: 10
  *   Rating: 1
  */
+int xisTmax(int x) {
+  return !((x + 1) ^ (~(x + 1) + 1)) & !!(x + 1);
+}
+
 int isTmax(int x) {
-  return 2;
+  int s = x + 1;
+  int t = ~x ^ s;
+
+  return !(t | !s);
 }
 /*
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -177,9 +184,18 @@ int isTmax(int x) {
  *   Max ops: 12
  *   Rating: 2
  */
-int allOddBits(int x) {
-  return 2;
+int xallOddBits(int x) {
+  int a = 170;
+  int b = a | a << 8 | a << 16 | a << 24;
+  return !(b & x) ^ b;
 }
+int allOddBits(int x) {
+  x = ~x;
+  int t = x | x >> 8 | x >> 16 | x >> 24;
+  t = t & 0xaa;
+  return !t;
+}
+
 /*
  * negate - return -x
  *   Example: negate(1) = -1.
@@ -188,7 +204,7 @@ int allOddBits(int x) {
  *   Rating: 2
  */
 int negate(int x) {
-  return 2;
+  return ~x + 1;
 }
 //3
 /*
