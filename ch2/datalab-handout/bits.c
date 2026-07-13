@@ -166,10 +166,6 @@ int tmin(void) {
  *   Max ops: 10
  *   Rating: 1
  */
-int xisTmax(int x) {
-  return !((x + 1) ^ (~(x + 1) + 1)) & !!(x + 1);
-}
-
 int isTmax(int x) {
   int s = x + 1;
   int t = ~x ^ s;
@@ -184,11 +180,6 @@ int isTmax(int x) {
  *   Max ops: 12
  *   Rating: 2
  */
-int xallOddBits(int x) {
-  int a = 170;
-  int b = a | a << 8 | a << 16 | a << 24;
-  return !(b & x) ^ b;
-}
 int allOddBits(int x) {
   x = ~x;
   int t = x | x >> 8 | x >> 16 | x >> 24;
@@ -217,7 +208,9 @@ int negate(int x) {
  *   Rating: 3
  */
 int isAsciiDigit(int x) {
-  return 2;
+  int high_ok = !((x & ~0x0f) ^ 0x30);
+  int low_ok = (!(x >> 3 & 1) | !((x & 0x0e) ^ 0x08));
+  return high_ok & low_ok;
 }
 /*
  * conditional - same as x ? y : z
@@ -227,7 +220,9 @@ int isAsciiDigit(int x) {
  *   Rating: 3
  */
 int conditional(int x, int y, int z) {
-  return 2;
+  int t = (!x << 31) >> 31;
+  int res = (z & t) | (y & ~t);
+  return res;
 }
 /*
  * isLessOrEqual - if x <= y  then return 1, else return 0
@@ -237,7 +232,12 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  return 2;
+  int symx = (x ^ y) >> 31;
+
+  int t = y + (~x + 1);
+  int sym = t >> 31 & 1;
+
+  return (symx & (x >> 31 & 1)) | (~symx & !sym);
 }
 //4
 /*
@@ -249,7 +249,7 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4
  */
 int logicalNeg(int x) {
-  return 2;
+  return ~((x | (~x + 1)) >> 31) & 1;
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
@@ -263,6 +263,10 @@ int logicalNeg(int x) {
  *  Max ops: 90
  *  Rating: 4
  */
+
+#define is_cont(x) !x | !~x // 5 ops
+
+
 int howManyBits(int x) {
   return 0;
 }
