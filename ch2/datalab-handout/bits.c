@@ -181,8 +181,9 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int allOddBits(int x) {
+  int t;
   x = ~x;
-  int t = x | x >> 8 | x >> 16 | x >> 24;
+  t = x | x >> 8 | x >> 16 | x >> 24;
   t = t & 0xaa;
   return !t;
 }
@@ -264,12 +265,29 @@ int logicalNeg(int x) {
  *  Rating: 4
  */
 
-#define is_cont(x) !x | !~x // 5 ops
-
-
 int howManyBits(int x) {
-  return 0;
+  int b16, b8, b4, b2, b1;
+
+  x = x ^ (x >> 31);
+
+  b16 = !!(x >> 16) << 4;
+  x >>= b16;
+
+  b8 = !!(x >> 8) << 3;
+  x >>= b8;
+
+  b4 = !!(x >> 4) << 2;
+  x >>= b4;
+
+  b2 = !!(x >> 2) << 1;
+  x >>= b2;
+
+  b1 = !!(x >> 1);
+  x >>= b1;
+
+  return b16 + b8 + b4 + b2 + b1 + x + 1;
 }
+
 //float
 /*
  * floatScale2 - Return bit-level equivalent of expression 2*f for
@@ -283,7 +301,19 @@ int howManyBits(int x) {
  *   Rating: 4
  */
 unsigned floatScale2(unsigned uf) {
-  return 2;
+  unsigned exp = uf >> 23 & 0xff;
+  unsigned m = (uf << 9) >> 9;
+  unsigned s;
+  if (exp) {
+    if (exp ^ 0xff)
+      exp = exp + 1;
+  }
+  else {
+    m <<= 1;
+  }
+  s = uf >> 31;
+
+  return s << 31 | exp << 23 | m;
 }
 /*
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
@@ -298,7 +328,27 @@ unsigned floatScale2(unsigned uf) {
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf) {
-  return 2;
+  unsigned exp = uf >> 23 & 0xff;
+  unsigned m = (uf << 9) >> 9;
+  int E = exp - 127;
+  int offset, abs;
+  if (exp) {
+    if (E >= 32)
+      return 0x80000000u;
+    else if (E < 0)
+      return 0;
+    else {
+      offset = 23 - E;
+      if (offset >= 0)
+        m >>= offset;
+      else
+        m <<= -offset;
+      abs = 1 << E | m;
+      return uf & (1 << 31) ? -abs : abs;
+    }
+  }
+
+  return 0;
 }
 /*
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
@@ -314,5 +364,20 @@ int floatFloat2Int(unsigned uf) {
  *   Rating: 4
  */
 unsigned floatPower2(int x) {
-  return 2;
+  int E = x;
+  int exp = E + 127;
+  unsigned offset = -exp;
+
+  if (exp < -23)
+    return 0;
+
+  if (exp <= 0 && exp >= -23) {
+    return 1 << (23 - offset);
+  }
+
+  if (exp > 255) {
+    return 0xff << 23;
+  }
+
+  return exp << 23;
 }
